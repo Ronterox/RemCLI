@@ -105,7 +105,7 @@ main() {
 		p+=" > "
 
 		local input
-		input=$(gum input --prompt "$p" --placeholder "Ask anything..." 2>/dev/null) || {
+		input=$(gum input --prompt "$p" --placeholder "Ask anything...") || {
 			echo ""
 			log_warn "Goodbye!"
 			exit 0
@@ -125,7 +125,7 @@ main() {
 				continue
 				;;
 			"/model")
-				MODEL=$(gum input --prompt "Model (provider/model): " --value "$MODEL" 2>/dev/null) || true
+				MODEL=$(gum input --prompt "Model (provider/model): " --value "$MODEL") || true
 				log_info "Model set to: ${MODEL:-default}"
 				echo ""
 				continue
