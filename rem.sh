@@ -52,6 +52,8 @@ while true; do
     esac
 
     echo ""
+    gum style --foreground 214 --bold "❯ $USER_INPUT"
+    echo ""
 
     OUTFILE="$TMPDIR_WORK/response.jsonl"
 
