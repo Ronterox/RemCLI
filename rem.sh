@@ -55,7 +55,7 @@ while true; do
 
     OUTFILE="$TMPDIR_WORK/response.jsonl"
 
-    ARGS=(--format json)
+    ARGS=(--format json --thinking)
     [[ -n "$MODEL" ]] && ARGS+=(-m "$MODEL")
     [[ -n "$SESSION_ID" ]] && ARGS+=(-c -s "$SESSION_ID")
     ARGS+=("$USER_INPUT")
@@ -64,7 +64,10 @@ while true; do
         sh -c 'opencode run "$@" > "$0" 2>/dev/null' "$OUTFILE" "${ARGS[@]}"
 
     FULL_TEXT=""
+    THINKING_TEXT=""
     TOTAL_TOKENS=0
+    REASONING_TOKENS=0
+    HAS_REASONING=false
 
     while IFS= read -r line; do
         [[ -z "$line" ]] && continue
@@ -75,6 +78,11 @@ while true; do
                 if [[ -z "$SESSION_ID" ]]; then
                     SESSION_ID=$(jq -r '.sessionID // ""' <<< "$line" 2>/dev/null)
                 fi
+                ;;
+            reasoning)
+                T=$(jq -r '.part.text // ""' <<< "$line" 2>/dev/null)
+                [[ -n "$T" ]] && THINKING_TEXT+="$T"
+                HAS_REASONING=true
                 ;;
             text)
                 T=$(jq -r '.part.text // ""' <<< "$line" 2>/dev/null)
@@ -100,10 +108,17 @@ while true; do
                 ;;
             step_finish)
                 TOK=$(jq -r '.part.tokens.total // 0' <<< "$line" 2>/dev/null)
+                RTOK=$(jq -r '.part.tokens.reasoning // 0' <<< "$line" 2>/dev/null)
                 TOTAL_TOKENS=$((TOTAL_TOKENS + TOK))
+                REASONING_TOKENS=$((REASONING_TOKENS + RTOK))
                 ;;
         esac
     done < "$OUTFILE"
+
+    if [[ "$HAS_REASONING" == true && -n "$THINKING_TEXT" ]]; then
+        THINKING_TEXT="${THINKING_TEXT#"${THINKING_TEXT%%[![:space:]]*}"}"
+        gum style --border rounded --border-foreground 60 --foreground 60 --padding "0 1" --margin "0 0 1 0" "$THINKING_TEXT"
+    fi
 
     if [[ -n "$FULL_TEXT" ]]; then
         FULL_TEXT="${FULL_TEXT#"${FULL_TEXT%%[![:space:]]*}"}"
