@@ -24,7 +24,7 @@ echo ""
 
 while true; do
     USER_INPUT=""
-    USER_INPUT=$(gum input --prompt "❯ " --placeholder "Message... (/exit to quit)" --width "$(tput cols)") || continue
+    USER_INPUT=$(gum input --cursor.mode="static" --prompt "❯ " --placeholder "Message... (/exit to quit)" --width "$(tput cols)") || continue
 
     [[ -z "$USER_INPUT" ]] && continue
 
@@ -43,7 +43,7 @@ while true; do
             ;;
         /model)
             echo ""
-            MODEL=$(gum input --prompt "model ❯ " --placeholder "provider/model (e.g. anthropic/claude-sonnet-4-20250514)") || continue
+            MODEL=$(gum input --cursor.mode="static" --prompt "model ❯ " --placeholder "provider/model (e.g. anthropic/claude-sonnet-4-20250514)") || continue
             echo ""
             gum style --foreground 240 "Model: $MODEL"
             echo ""
