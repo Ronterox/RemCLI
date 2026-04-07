@@ -132,6 +132,11 @@ main() {
 				;;
 		esac
 
+		# Echo the user's message so it persists in the scrollback
+		echo -e "\033[1;33m━━ You ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
+		echo "$input"
+		echo ""
+
 		local raw_file="$TMPDIR_REM/raw.jsonl"
 		local parsed_file="$TMPDIR_REM/parsed.json"
 
