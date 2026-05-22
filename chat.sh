@@ -3,11 +3,12 @@
 API_URL="${API_URL:-http://127.0.0.1:8080}"
 
 CHAT=(
-    "Hello, Assistant."
-    "Hello. How may I help you today?"
-    "Please tell me the largest city in Europe."
-    "Sure. The largest city in Europe is Moscow, the capital of Russia."
+    # "Hello, Assistant."
+    # "Hello. How may I help you today?"
+    # "Please tell me the largest city in Europe."
+    # "Sure. The largest city in Europe is Moscow, the capital of Russia."
 )
+CHAT=("${CHAT[@]/#/<think><\/think>}")
 
 INSTRUCTION="A chat between a curious human and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the human's questions."
 
@@ -23,8 +24,10 @@ trim_trailing() {
 }
 
 format_prompt() {
-    echo -n "${INSTRUCTION}"
-    printf "\n### Human: %s\n### Assistant: %s" "${CHAT[@]}" "$1"
+	printf "<|im_start|>system\n%s<|im_end|>\n" "$INSTRUCTION"
+	#<|im_start|>user\n%s<|im_end|>\n<|im_start|>assistant\n<think>\nreasoning\n</think>\n\ncontent
+	printf "<|im_start|>user\n%s<|im_end|>\n<|im_start|>assistant\n%s<|im_end|>\n" "${CHAT[@]}"
+	printf "<|im_start|>user\n%s<|im_end|>\n<|im_start|>assistant\n" "$1"
 }
 
 tokenize() {
@@ -52,7 +55,7 @@ chat_completion() {
 		presence_penalty: 0.0,
 		repetition_penalty: 1.0,
         n_keep: $n_keep,
-        n_predict: 512,
+        # n_predict: 2048,
         cache_prompt: true,
         stop: ["\n### Human:"],
         stream: true
