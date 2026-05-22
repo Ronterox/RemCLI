@@ -3,10 +3,10 @@
 API_URL="${API_URL:-http://127.0.0.1:8080}"
 
 CHAT=(
-    # "Hello, Assistant."
-    # "Hello. How may I help you today?"
-    # "Please tell me the largest city in Europe."
-    # "Sure. The largest city in Europe is Moscow, the capital of Russia."
+    "Hello, Assistant."
+    "Hello. How may I help you today?"
+    "Please tell me the largest city in Europe."
+    "Sure. The largest city in Europe is Moscow, the capital of Russia."
 )
 CHAT=("${CHAT[@]/#/<think><\/think>}")
 
@@ -76,27 +76,25 @@ chat_completion() {
         stream: true
     }')"
 
-    ANSWER=''
-	RENDER=''
-	COUNT=0
+    local answer=''
 	while IFS= read -r OUT; do
-		ANSWER+="${OUT//$'\\n'/$'\n'}" # WTF is this?
-		COUNT=$((COUNT + 1))
-
-		[ $((COUNT % 10)) -ne 0 ] && continue
-
-		PREV=$(count_visual_lines "$RENDER")
-		[ "$PREV" -gt 0 ] && tput cuu "$PREV"
-		tput ed
-
-		RENDER=$(printf "%s" "$ANSWER" | mq-view)
-		printf "%s\n" "$RENDER"
+		TOKEN="${OUT//$'\\n'/$'\n'}" # WTF is this?
+		answer+="${TOKEN}"
+		printf "%s" "${TOKEN}"
 	done < <(curl \
 			-X POST -Ns --url "${API_URL}/completion" \
 			-H "Content-Type: application/json" --data-raw "${DATA}" \
 			| jq -R -r --unbuffered 'sub("^data:";"") | fromjson? | .content | gsub("\n";"\\n")')
 
-    CHAT+=("$1" "$(trim "$ANSWER")")
+	PREV=$(count_visual_lines "$answer")
+
+	tput cuu "$((PREV - 1))"
+	tput hpa 0 # horizontal position absolute
+	tput ed
+
+	echo "$answer" | mq-view | sed 's/^/\t/'
+
+    CHAT+=("$1" "$(trim "$answer")")
 }
 
 while true; do
