@@ -39,6 +39,21 @@ tokenize() {
     | jq '.tokens[]'
 }
 
+count_visual_lines() {
+    local text="$1"
+    local cols=$(tput cols)
+    local count=0
+    while IFS= read -r line; do
+        local len=${#line}
+        if [ "$len" -eq 0 ]; then
+            count=$((count + 1))
+        else
+            count=$((count + (len + cols - 1) / cols))
+        fi
+    done <<< "$text"
+    echo "$count"
+}
+
 N_KEEP=$(tokenize "${INSTRUCTION}" | wc -l)
 
 chat_completion() {
@@ -57,19 +72,29 @@ chat_completion() {
         n_keep: $n_keep,
         # n_predict: 2048,
         cache_prompt: true,
-        stop: ["\n### Human:"],
+        stop: ["<|im_end|>\n"],
         stream: true
     }')"
 
     ANSWER=''
+	RENDER=''
+	COUNT=0
 	while IFS= read -r OUT; do
-		ANSWER+="${OUT}"
-		printf "%s" "${OUT}"
+		ANSWER+="${OUT//$'\\n'/$'\n'}" # WTF is this?
+		COUNT=$((COUNT + 1))
+
+		[ $((COUNT % 10)) -ne 0 ] && continue
+
+		PREV=$(count_visual_lines "$RENDER")
+		[ "$PREV" -gt 0 ] && tput cuu "$PREV"
+		tput ed
+
+		RENDER=$(printf "%s" "$ANSWER" | mq-view)
+		printf "%s\n" "$RENDER"
 	done < <(curl \
 			-X POST -Ns --url "${API_URL}/completion" \
 			-H "Content-Type: application/json" --data-raw "${DATA}" \
-			| jq -R -r --unbuffered 'sub("^data:";"") | fromjson? | .content')
-    printf "\n"
+			| jq -R -r --unbuffered 'sub("^data:";"") | fromjson? | .content | gsub("\n";"\\n")')
 
     CHAT+=("$1" "$(trim "$ANSWER")")
 }
