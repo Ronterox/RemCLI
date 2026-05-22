@@ -28,11 +28,10 @@ format_prompt() {
 }
 
 tokenize() {
+	# -n means do not read input. Good for constructing json
     curl \
-        --silent \
-        --request POST \
-        --url "${API_URL}/tokenize" \
-        --header "Content-Type: application/json" \
+        -s -X POST --url "${API_URL}/tokenize" \
+        -H "Content-Type: application/json" \
         --data-raw "$(jq -ns --arg content "$1" '{content:$content}')" \
     | jq '.tokens[]'
 }
@@ -41,6 +40,9 @@ N_KEEP=$(tokenize "${INSTRUCTION}" | wc -l)
 
 chat_completion() {
     PROMPT="$(trim_trailing "$(format_prompt "$1")")"
+	# -R raw input -s is slurp for taking the whole input once not per line
+	# argjson: setss a value like foo 123 to $foo
+	# arg always string, argjson parses value
     DATA="$(echo -n "$PROMPT" | jq -Rs --argjson n_keep $N_KEEP '{
         prompt: .,
         temperature: 1.0,
@@ -57,21 +59,13 @@ chat_completion() {
     }')"
 
     ANSWER=''
-
-    while IFS= read -r LINE; do
-        if [[ $LINE = data:* ]]; then
-            CONTENT="$(echo "${LINE:5}" | jq -r '.content')"
-            printf "%s" "${CONTENT}"
-            ANSWER+="${CONTENT}"
-        fi
-    done < <(curl \
-        --silent \
-        --no-buffer \
-        --request POST \
-        --url "${API_URL}/completion" \
-        --header "Content-Type: application/json" \
-        --data-raw "${DATA}")
-
+	while IFS= read -r OUT; do
+		ANSWER+="${OUT}"
+		printf "%s" "${OUT}"
+	done < <(curl \
+			-X POST -Ns --url "${API_URL}/completion" \
+			-H "Content-Type: application/json" --data-raw "${DATA}" \
+			| jq -R -r --unbuffered 'sub("^data:";"") | fromjson? | .content')
     printf "\n"
 
     CHAT+=("$1" "$(trim "$ANSWER")")
