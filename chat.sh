@@ -10,7 +10,34 @@ CHAT=(
 )
 CHAT=("${CHAT[@]/#/<think><\/think>}")
 
-INSTRUCTION="A chat between a curious human and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the human's questions."
+# TODO: Newlines keep them
+SYSTEM_PROMPT="
+# Persona & Core Objective
+You are RemCLI, an advanced autonomous terminal agent. Your goal is to assist the user by executing tasks directly on their system using your available tools. You have direct terminal/system access through these functions. Be precise, efficient, and careful.
+
+# Operational Loop (Thought -> Call -> Response)
+When a user gives you a command or asks a question, you must follow this internal loop:
+1. **Analyze:** Understand the user's ultimate goal. Break down complex tasks into sequential tool steps.
+2. **Think:** Formulate your plan inside a \`<think>\` block. Critique your plan for system safety and syntax accuracy.
+3. **Act:** If a tool call is required, emit the exact tool call block *immediately* after your \`<think>\` block.
+4. **Halt:** Stop generating immediately after closing the \`</tool_call>\` tag. Wait for the system to execute the command and return the result.
+
+# Guardrails & Rules
+- **Silent Tool Usage:** When using a tool, your entire response should *only* consist of your reasoning block followed by your tool call block. Do not say \"Sure, let me run that for you\" or provide conversational filler.
+- **Multiline Values:** If a parameter value spans multiple lines (like scripts or long inputs), place the lines exactly between the \`<parameter=...>\` and \`</parameter>\` tags. Do not inject extra quotes or escape characters unless the tool documentation specifically demands it.
+- **Independence:** If a task requires multiple commands, run them one at a time. Do not try to predict the output of command 1 before choosing parameter inputs for command 2.
+- **Fallback:** If no tools match the user's request, drop the agent persona entirely and answer conversationally using your internal knowledge base.
+"
+
+TOOLS_PROMPT="
+# Tools\n\nYou have access to the following functions:\n\n<tools>$(bun run tools.ts)\n</tools>
+\n\nIf you choose to call a function ONLY reply in the following format with NO suffix:\n\n<tool_call>\n<function=example_function_name>\n<parameter=example_parameter_1>\nvalue_1\n</parameter>\n<parameter=example_parameter_2>\nThis is the value for the second parameter\nthat can span\nmultiple lines\n</parameter>\n</function>\n</tool_call>\n\n<IMPORTANT>\nReminder:\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\n- Required parameters MUST be specified\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\n</IMPORTANT>
+"
+
+SYSTEM=$(printf "$SYSTEM_PROMPT\n\n$TOOLS_PROMPT\n\n")
+
+# echo "$SYSTEM"
+# exit
 
 trim() {
     shopt -s extglob
@@ -24,7 +51,7 @@ trim_trailing() {
 }
 
 format_prompt() {
-	printf "<|im_start|>system\n%s<|im_end|>\n" "$INSTRUCTION"
+	printf "<|im_start|>system\n%s<|im_end|>\n" "$SYSTEM"
 	#<|im_start|>user\n%s<|im_end|>\n<|im_start|>assistant\n<think>\nreasoning\n</think>\n\ncontent
 	printf "<|im_start|>user\n%s<|im_end|>\n<|im_start|>assistant\n%s<|im_end|>\n" "${CHAT[@]}"
 	printf "<|im_start|>user\n%s<|im_end|>\n<|im_start|>assistant\n" "$1"
@@ -54,7 +81,7 @@ count_visual_lines() {
     echo "$count"
 }
 
-N_KEEP=$(tokenize "${INSTRUCTION}" | wc -l)
+N_KEEP=$(tokenize "${SYSTEM}" | wc -l)
 
 chat_completion() {
     PROMPT="$(trim_trailing "$(format_prompt "$1")")"
@@ -86,6 +113,9 @@ chat_completion() {
 			-H "Content-Type: application/json" --data-raw "${DATA}" \
 			| jq -R -r --unbuffered 'sub("^data:";"") | fromjson? | .content | gsub("\n";"\\n")')
 
+	if [[ "$answer" =~ "<tool_call>" ]]; then
+	fi
+
 	PREV=$(count_visual_lines "$answer")
 
 	tput cuu "$((PREV - 1))"
@@ -99,5 +129,6 @@ chat_completion() {
 
 while true; do
     read -r -e -p "> " QUESTION
+	echo ""
     chat_completion "${QUESTION}"
 done

@@ -38,6 +38,9 @@
 
     \chapter{Methodology}\label{ch:methodology}
 
+	I decided to make everything in bash at first, as it is the fastest way to prototype abusing multiple
+	profesional cli tooling. Final goal is to develop it on a Zig codebase, for learning the language.
+
 	\begin{enumerate}
     \item Use the lowest level API handler for LLMs like llama.cpp
 	\item Run it's server and parse the whole API on your own custom agent
@@ -54,9 +57,32 @@
 
 	\chapter{Agent}\label{ch:chat}
 
+	The agent cli itself.
+
 	\section{LLM}
 
+	Using simply llama.cpp as a backend. Self compiled through the official repo \textbf{README.md} for nvidia cards (can run on CPU).
+
+	\subsection{Version 1}
+
+	Running qwen 0.8B which supports function calling. And simple requests.
+
+	\begin{verbatim}
+		llama-server -hf unsloth/Qwen3.5-0.8B-GGUF -ngl 99 --flash-attn auto -t 6 -c 16384 -b 512 --ubatch-size 128 --mlock
+	\end{verbatim}
+
+	\begin{quote}
+		Optimized for performance. And answering speed.
+	\end{quote}
+
+	\subsection{Version 2}
+
+	This will follow a more generalized routing version for LLAMA server where you can change the loaded model.
+	For multimodal combination purposes.
+
 	\section{Chat}
+
+	\subsection{Version 1}
 
 	\section{Function Calling}
 
