@@ -3,10 +3,10 @@
 API_URL="${API_URL:-http://127.0.0.1:8080}"
 
 CHAT=(
-    "Hello, Assistant."
-    "Hello. How may I help you today?"
-    "Please tell me the largest city in Europe."
-    "Sure. The largest city in Europe is Moscow, the capital of Russia."
+    # "Hello, Assistant."
+    # "Hello. How may I help you today?"
+    # "Please tell me the largest city in Europe."
+    # "Sure. The largest city in Europe is Moscow, the capital of Russia."
 )
 CHAT=("${CHAT[@]/#/<think><\/think>}")
 

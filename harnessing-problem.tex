@@ -1,0 +1,65 @@
+\documentclass[12pt, a4paper, oneside]{report}
+
+% Standard margin on latex
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+
+\title{The Harnessing Problem}
+\author{Ricardo Montserrat}
+
+\begin{document}
+    \maketitle
+
+	\begin{abstract}
+	This is the abstract. It should be a single paragraph that summarizes the entire thesis, including the problem statement, methodology, results, and major conclusions of "The Harnessing Problem."
+	\end{abstract}
+
+	\tableofcontents
+	\clearpage
+
+	\chapter{Introduction}\label{ch:introduction}
+
+    Harnessing is the art of limiting the resources of the AI for quality improvement over what it does.
+
+	Guarding through code, and automated algorithms and methods are the main tools used to harness AI.
+
+    \section{Background of the Problem}
+
+    There is too many variables, that make hard to identify whether a method is a harnessing method is better than other,
+	or maybe it was just coincidence and luck. Maybe the model was just better at a certain thing.
+
+	Maybe it was a single piece of context or token that made it go from bad to good.
+
+    \chapter{Literature Review}\label{ch:lit_review}
+
+	People has created multiple methodologies for frameworks that "allow" you to better your AI agent.
+
+	But no one has tested which is better besides their own personal experience.
+
+    \chapter{Methodology}\label{ch:methodology}
+
+	\begin{enumerate}
+    \item Use the lowest level API handler for LLMs like llama.cpp
+	\item Run it's server and parse the whole API on your own custom agent
+		\newline\newline \textbf{Requirements for a good agent:}
+		\begin{enumerate}
+			\item Good instruction following of simple requests
+			\item Decent consistency of answers for the same input
+			\item Visualize thinking process, and reasoning model
+			\item Be able to do function calling, for MCP
+		\end{enumerate}
+	\item Find a general model that can be used for all the above,
+	without consuming much of your GPU resources for smoke testing
+	\end{enumerate}
+
+	\chapter{Agent}\label{ch:chat}
+
+	\section{LLM}
+
+	\section{Chat}
+
+	\section{Function Calling}
+
+	\chapter{Harnessing}\label{ch:harnessing}
+
+\end{document}
