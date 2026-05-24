@@ -30,8 +30,44 @@ When a user gives you a command or asks a question, you must follow this interna
 "
 
 TOOLS_PROMPT="
-# Tools\n\nYou have access to the following functions:\n\n<tools>$(bun run tools.ts)\n</tools>
-\n\nIf you choose to call a function ONLY reply in the following format with NO suffix:\n\n<tool_call>\n<function=example_function_name>\n<parameter=example_parameter_1>\nvalue_1\n</parameter>\n<parameter=example_parameter_2>\nThis is the value for the second parameter\nthat can span\nmultiple lines\n</parameter>\n</function>\n</tool_call>\n\n<IMPORTANT>\nReminder:\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\n- Required parameters MUST be specified\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\n</IMPORTANT>
+# Tools
+
+You have access to the following functions:
+
+<tools>
+$(bun run tools.ts)
+</tools>
+
+If you choose to call a function ONLY reply in the following format with NO suffix:
+
+When you have the following tool:
+
+{\"type\": \"function\", \"function\": {\"name\": \"example_function_name\", \"description\": \"Description of what the function does goes here\", \"parameters\": {\"type\": \"object\", \"properties\": {\"example_parameter_1\": {\"type\": \"string\", \"description\": \"Description for the first parameter\"}, \"example_parameter_2\": {\"type\": \"string\", \"description\": \"Description for the second parameter (supports multi-line strings)\"}}, \"required\": [\"example_parameter_1\", \"example_parameter_2\"]}}}
+
+You can call it with the following format:
+
+<tool_call>
+<function=example_function_name>
+<parameter=example_parameter_1>
+value_1
+</parameter>
+<parameter=example_parameter_2>
+This is the value for the second parameter
+that can span
+multiple lines
+</parameter>
+</function>
+</tool_call>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call>
+ XML tags
+- Required parameters MUST be specified
+- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after
+- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about func
+tion calls
+</IMPORTANT>
 "
 
 SYSTEM=$(printf "$SYSTEM_PROMPT\n\n$TOOLS_PROMPT\n\n")
@@ -42,11 +78,6 @@ SYSTEM=$(printf "$SYSTEM_PROMPT\n\n$TOOLS_PROMPT\n\n")
 trim() {
     shopt -s extglob
     set -- "${1##+([[:space:]])}"
-    printf "%s" "${1%%+([[:space:]])}"
-}
-
-trim_trailing() {
-    shopt -s extglob
     printf "%s" "${1%%+([[:space:]])}"
 }
 
@@ -86,6 +117,7 @@ count_visual_lines() {
 N_KEEP=$(tokenize "${SYSTEM}" | wc -l)
 
 chat_completion() {
+	echo "USER: $1"
 	# echo "Formatting prompt..."
     PROMPT="$(format_prompt "$1")"
 
@@ -140,6 +172,9 @@ chat_completion() {
 		if [[ "$name" =~ "bash" ]]; then
 			cmd=$(echo "$fcall" | jq -r '.function.parameter.content')
 			response=$(eval "$cmd")
+		elif [[ "$name" =~ "read" ]]; then
+			filename=$(echo "$call" | jq -r '.function.parameter.content')
+			response=$(cat "$filename")
 		fi
 
 		if [[ -n "$response" ]]; then
