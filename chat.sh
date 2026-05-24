@@ -53,7 +53,9 @@ trim_trailing() {
 format_prompt() {
 	printf "<|im_start|>system\n%s<|im_end|>\n" "$SYSTEM"
 	#<|im_start|>user\n%s<|im_end|>\n<|im_start|>assistant\n<think>\nreasoning\n</think>\n\ncontent
-	printf "<|im_start|>user\n%s<|im_end|>\n<|im_start|>assistant\n%s<|im_end|>\n" "${CHAT[@]}"
+	if [[ "${#CHAT[@]}" -gt 0 ]]; then
+		printf "<|im_start|>user\n%s<|im_end|>\n<|im_start|>assistant\n%s<|im_end|>\n" "${CHAT[@]}"
+	fi
 	printf "<|im_start|>user\n%s<|im_end|>\n<|im_start|>assistant\n" "$1"
 }
 
@@ -84,11 +86,14 @@ count_visual_lines() {
 N_KEEP=$(tokenize "${SYSTEM}" | wc -l)
 
 chat_completion() {
-    PROMPT="$(trim_trailing "$(format_prompt "$1")")"
+	# echo "Formatting prompt..."
+    PROMPT="$(format_prompt "$1")"
+
+	# echo "Creating data..."
 	# -R raw input -s is slurp for taking the whole input once not per line
 	# argjson: setss a value like foo 123 to $foo
 	# arg always string, argjson parses value
-    DATA="$(echo -n "$PROMPT" | jq -Rs --argjson n_keep $N_KEEP '{
+    DATA="$(echo "$PROMPT" | jq -Rs --argjson n_keep $N_KEEP '{
         prompt: .,
         temperature: 1.0,
         top_k: 20,
@@ -103,6 +108,7 @@ chat_completion() {
         stream: true
     }')"
 
+	# echo "Waiting for AI..."
     local answer=''
 	while IFS= read -r OUT; do
 		TOKEN="${OUT//$'\\n'/$'\n'}" # WTF is this?
@@ -113,9 +119,6 @@ chat_completion() {
 			-H "Content-Type: application/json" --data-raw "${DATA}" \
 			| jq -R -r --unbuffered 'sub("^data:";"") | fromjson? | .content | gsub("\n";"\\n")')
 
-	if [[ "$answer" =~ "<tool_call>" ]]; then
-	fi
-
 	PREV=$(count_visual_lines "$answer")
 
 	tput cuu "$((PREV - 1))"
@@ -125,6 +128,24 @@ chat_completion() {
 	echo "$answer" | mq-view | sed 's/^/\t/'
 
     CHAT+=("$1" "$(trim "$answer")")
+
+	if [[ "$answer" =~ "<tool_call>" ]]; then
+		# swap to test.xml for testing
+		local fcall=$(echo "$answer" | sed -E 's/<([^= ]+)=([^>]+)>/<\1 name="\2">/g' | \
+			yq -p=xml -o=json '.tool_call' | sed -E 's/"\+@?/"/g')
+
+		local name=$(echo "$fcall" | jq -r '.function.name')
+		local response=''
+
+		if [[ "$name" =~ "bash" ]]; then
+			cmd=$(echo "$fcall" | jq -r '.function.parameter.content')
+			response=$(eval "$cmd")
+		fi
+
+		if [[ -n "$response" ]]; then
+			chat_completion "$(printf "<tool_response>\n%s\n</tool_response>" "$response")"
+		fi
+	fi
 }
 
 while true; do
