@@ -35,7 +35,7 @@ TOOLS_PROMPT="
 You have access to the following functions:
 
 <tools>
-$(bun run tools.ts)
+$(bun run tools/tools.ts)
 </tools>
 
 If you choose to call a function ONLY reply in the following format with NO suffix:
