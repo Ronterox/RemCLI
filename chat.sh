@@ -126,7 +126,7 @@ chat_completion() {
 	# arg always string, argjson parses value
     DATA="$(echo "$PROMPT" | jq -Rs --argjson n_keep $N_KEEP '{
         prompt: .,
-        temperature: 1.0,
+        temperature: 0.0,
         top_k: 20,
         top_p: 0.95,
 		min_p: 0.0,
@@ -161,19 +161,17 @@ chat_completion() {
     CHAT+=("$1" "$(trim "$answer")")
 
 	if [[ "$answer" =~ "<tool_call>" ]]; then
-		# swap to test.xml for testing
-		local fcall=$(echo "$answer" | sed -E 's/<([^= ]+)=([^>]+)>/<\1 name="\2">/g' | \
-			yq -p=xml -o=json '.tool_call' | sed -E 's/"\+@?/"/g')
-
-		local name=$(echo "$fcall" | jq -r '.function.name')
-		local response=''
+		local name=$(echo "$answer" | grep -oP '(?<=<function=)[^>]+')
+		local response=""
 
 		if [[ "$name" == "bash" ]]; then
-			cmd=$(echo "$fcall" | jq -r '.function.parameter.content')
-			response=$(eval "$cmd")
+			local param=$(echo "$answer" | sed -n '/<parameter=command>/,/<\/parameter>/p' | sed '1d;$d')
+			response=$(eval "$param" 2>&1)
+			[ -z "$response" ] && response="exit code $?"
 		elif [[ "$name" == "read" ]]; then
-			filename=$(echo "$fcall" | jq -r '.function.parameter.content')
-			response=$(cat "$filename")
+			local param=$(echo "$answer" | sed -n '/<parameter=name>/,/<\/parameter>/p' | sed '1d;$d')
+			response=$(cat "$param" 2>&1)
+			[ -z "$response" ] && response="exit code $?"
 		fi
 
 		if [[ -n "$response" ]]; then
@@ -181,6 +179,10 @@ chat_completion() {
 		fi
 	fi
 }
+
+if [[ $# -ne 0 ]]; then
+	chat_completion "$*"
+fi
 
 while true; do
     read -r -e -p "> " QUESTION
