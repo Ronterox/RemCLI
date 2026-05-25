@@ -12,7 +12,7 @@ setup() {
 	/exit
 	EOF
 	assert_output --partial "$(pwd)"
-	assert_output --partial "</think>"
+	assert_output --partial "<function=bash>"
 	assert_output --partial "Exiting..."
 }
 
@@ -22,7 +22,17 @@ setup() {
 	/exit
 	EOF
 	assert_output --partial "$(cat benchmark/joke)"
-	assert_output --partial "</think>"
+	assert_output --partial "<function=read>"
 	assert_output --partial "Exiting..."
 }
 
+@test "Can run subagents" {
+	run chat.sh <<-EOF
+	List your tools
+	Call a subagent and tell it to run pwd
+	/exit
+	EOF
+	assert_output --partial "$(pwd)"
+	assert_output --partial "<function=subagent>"
+	assert_output --partial "Exiting..."
+}
