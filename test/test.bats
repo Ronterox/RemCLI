@@ -39,5 +39,12 @@ setup() {
 	/exit
 	EOF
 	assert_output --partial "$(cat benchmark/joke)"
+	assert_output --partial "</think>"
 	assert_output --partial "Exiting..."
+}
+
+@test "/ask: run command and exit get response" {
+	run chat.sh "/ask hi."
+	assert_output --partial "> Full output at:"
+	refute_output --partial "</think>"
 }
