@@ -65,8 +65,7 @@ Reminder:
  XML tags
 - Required parameters MUST be specified
 - You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after
-- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about func
-tion calls
+- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls
 </IMPORTANT>
 "
 
@@ -169,11 +168,11 @@ chat_completion() {
 		local name=$(echo "$fcall" | jq -r '.function.name')
 		local response=''
 
-		if [[ "$name" =~ "bash" ]]; then
+		if [[ "$name" == "bash" ]]; then
 			cmd=$(echo "$fcall" | jq -r '.function.parameter.content')
 			response=$(eval "$cmd")
-		elif [[ "$name" =~ "read" ]]; then
-			filename=$(echo "$call" | jq -r '.function.parameter.content')
+		elif [[ "$name" == "read" ]]; then
+			filename=$(echo "$fcall" | jq -r '.function.parameter.content')
 			response=$(cat "$filename")
 		fi
 

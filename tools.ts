@@ -17,13 +17,16 @@ const tools = {
     ),
 };
 
-function parse(name: string, obj: z.ZodObject): string {
+function parse(name: string, obj: z.ZodObject<any>): string {
     const schema = obj.toJSONSchema({ target: "openapi-3.0" });
+    const { description, ...parameterSchema } = schema;
+
     return JSON.stringify({
         type: "function" as const,
         function: {
-            name, description: schema.description,
-            parameters: schema.properties,
+            name,
+            description: description,
+            parameters: parameterSchema,
         }
     }, null, 0);
 }
