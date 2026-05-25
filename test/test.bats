@@ -44,7 +44,7 @@ setup() {
 }
 
 @test "/ask: run command and exit get response" {
-	run chat.sh "/ask hi."
+	run timeout 2 chat.sh "/ask hi."
 	assert_output --partial "> Full output at:"
 	refute_output --partial "</think>"
 }

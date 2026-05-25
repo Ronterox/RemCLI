@@ -16,7 +16,7 @@ server() {
 
 # @cmd Runs the test suite
 test() {
-	CTX_SIZE=$CTX_SIZE ./test/bats/bin/bats -p test/test.bats
+	CTX_SIZE=$CTX_SIZE ./test/bats/bin/bats -T -p test/test.bats
 }
 
 # @cmd Parses the tools.ts file
@@ -26,7 +26,7 @@ tools() {
 
 # @cmd Runs the whole benchmark
 benchmark() {
-	CTX_SIZE=$CTX_SIZE ./test/bats/bin/bats -p test/benchmark.bats
+	CTX_SIZE=$CTX_SIZE ./test/bats/bin/bats -T -p test/benchmark.bats
 }
 
 # See more details at https://github.com/sigoden/argc

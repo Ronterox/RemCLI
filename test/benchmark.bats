@@ -7,7 +7,7 @@ setup() {
 }
 
 @test "Can run bash commands" {
-	run chat.sh <<-EOF
+	run timeout 4 chat.sh <<-EOF
 	Run pwd and tell me on which directory are we
 	/exit
 	EOF
@@ -17,7 +17,7 @@ setup() {
 }
 
 @test "Can read files" {
-	run chat.sh <<-EOF
+	run timeout 12 chat.sh <<-EOF
 	Find the file called joke, read it, and tell me what it says exactly
 	/exit
 	EOF
@@ -27,7 +27,7 @@ setup() {
 }
 
 @test "Can run subagents" {
-	run chat.sh <<-EOF
+	run timeout 16 chat.sh <<-EOF
 	List your tools
 	Call a subagent and tell it to run pwd
 	/exit
