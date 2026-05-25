@@ -1,20 +1,22 @@
 #!/usr/bin/env bash
 
+CTX_SIZE=${CTX_SIZE:-32768}
+
 set -e
 
 # @cmd Starts a chat with the RemCLI
 chat() {
-	./chat.sh
+	CTX_SIZE="$CTX_SIZE" ./chat.sh
 }
 
 # @cmd Starts the llama cpp server
 server() {
-	llama-server -hf unsloth/Qwen3.5-0.8B-GGUF -ngl 99 --flash-attn auto -t 6 -c 32768 -b 512 --ubatch-size 128 --mlock
+	llama-server -hf unsloth/Qwen3.5-0.8B-GGUF -ngl 99 --flash-attn auto -t 6 -c $CTX_SIZE -b 512 --ubatch-size 128 --mlock
 }
 
 # @cmd Runs the test suite
 test() {
-	./test/bats/bin/bats -p test/
+	CTX_SIZE=$CTX_SIZE ./test/bats/bin/bats -p test/
 }
 
 # @cmd Parses the tools.ts file

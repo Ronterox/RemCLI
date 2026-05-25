@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 API_URL="${API_URL:-http://127.0.0.1:8080}"
-CTX_SIZE=32768
+CTX_SIZE="${CTX_SIZE:-32768}"
 
 CHAT=(
     # "Hello, Assistant."
@@ -201,10 +201,8 @@ evaluate_input() {
 		CHAT=()
 	elif [[ "$INPUT" =~ ^/ping ]]; then
 		echo "pong"
-		exit 0
 	elif [[ "$INPUT" =~ ^/checkhealth ]]; then
 		curl -Ls http://localhost:8080/health | jq -r .status
-		exit 0
 	elif [[ "$INPUT" =~ ^/usage ]]; then
 		echo "tokens: $(get_usage)"
 	elif [[ "$INPUT" =~ ^/load ]]; then
