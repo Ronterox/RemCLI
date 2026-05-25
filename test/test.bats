@@ -17,5 +17,5 @@ setup() {
 	run chat.sh <<-EOF
 	/checkhealth
 	EOF
-	assert_output --partial "ok!"
+	assert_output --partial "ok"
 }

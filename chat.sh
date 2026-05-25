@@ -202,6 +202,9 @@ evaluate_input() {
 	elif [[ "$INPUT" =~ ^/ping ]]; then
 		echo "pong"
 		exit 0
+	elif [[ "$INPUT" =~ ^/checkhealth ]]; then
+		curl -Ls http://localhost:8080/health | jq -r .status
+		exit 0
 	elif [[ "$INPUT" =~ ^/usage ]]; then
 		echo "tokens: $(get_usage)"
 	elif [[ "$INPUT" =~ ^/load ]]; then
