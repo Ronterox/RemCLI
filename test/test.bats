@@ -32,3 +32,12 @@ setup() {
 	assert_output --regexp "tokens: [0-9]+/[0-9]+ \([0-9]+%\)"
 	assert_output --partial "Exiting..."
 }
+
+@test "/load: load a file as context" {
+	run chat.sh <<-EOF
+	/load benchmark/joke
+	/exit
+	EOF
+	assert_output --partial "$(cat benchmark/joke)"
+	assert_output --partial "Exiting..."
+}

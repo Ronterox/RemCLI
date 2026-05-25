@@ -114,6 +114,7 @@ count_visual_lines() {
 }
 
 N_KEEP=$(tokenize "${SYSTEM}" | wc -l)
+N_PREDICT=$(((CTX_SIZE / 2) - N_KEEP))
 
 chat_completion() {
 	# echo "USER: $1"
@@ -124,18 +125,19 @@ chat_completion() {
 	# -R raw input -s is slurp for taking the whole input once not per line
 	# argjson: setss a value like foo 123 to $foo
 	# arg always string, argjson parses value
-    DATA="$(echo "$PROMPT" | jq -Rs --argjson n_keep $N_KEEP '{
+    DATA="$(echo "$PROMPT" | jq -Rs --argjson n_keep $N_KEEP --argjson n_predict $N_PREDICT '{
         prompt: .,
         temperature: 0.0,
-        top_k: 20,
+        top_k: 40,
         top_p: 0.95,
-		min_p: 0.0,
-		presence_penalty: 0.0,
+		min_p: 0.05,
+		presence_penalty: 0.1,
 		repetition_penalty: 1.0,
+		repeat_last_n: 64,
         n_keep: $n_keep,
-        # n_predict: 2048,
+        n_predict: $n_predict,
         cache_prompt: true,
-        stop: ["<|im_end|>\n"],
+        stop: ["<|im_end|>"],
         stream: true
     }')"
 
@@ -209,6 +211,7 @@ evaluate_input() {
 		if [[ "$INPUT" =~ ^/load[[:space:]]+(.+) ]]; then
 			filename="${BASH_REMATCH[1]}"
 			content=$(cat "$filename" 2>&1)
+			printf "<file=$filename>\n$(head $filename)\n...\n</file>\n"
 			chat_completion "$(printf "<file=%s>\n%s\n</file>" "$filename" "$content")"
 		else
 			echo "Please provide the file path to load."
