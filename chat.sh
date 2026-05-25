@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 API_URL="${API_URL:-http://127.0.0.1:8080}"
+CTX_SIZE=32768
 
 CHAT=(
     # "Hello, Assistant."
@@ -10,7 +11,6 @@ CHAT=(
 )
 CHAT=("${CHAT[@]/#/<think><\/think>}")
 
-# TODO: Newlines keep them
 SYSTEM_PROMPT="
 # Persona & Core Objective
 You are RemCLI, an advanced autonomous terminal agent. Your goal is to assist the user by executing tasks directly on their system using your available tools. You have direct terminal/system access through these functions. Be precise, efficient, and careful.
@@ -180,12 +180,41 @@ chat_completion() {
 	fi
 }
 
+get_usage() {
+	local tokens=$(tokenize "$(format_prompt)" | wc -l)
+	echo "$tokens/$CTX_SIZE ($((tokens*100/CTX_SIZE))%)"
+}
+
+timestamp() { printf "[%s]" "$(date +"%H:%M:%S")"; }
+
+evaluate_input() {
+	INPUT="$*"
+	if [[ "$INPUT" =~ ^/exit ]]; then
+		echo "Exiting..."
+		exit 0
+	elif [[ "$INPUT" =~ ^/clear ]]; then
+		echo "Clearing chat..."
+		CHAT=()
+	elif [[ "$INPUT" =~ ^/usage ]]; then
+		echo "tokens: $(get_usage)"
+	elif [[ "$INPUT" =~ ^/load ]]; then
+		if [[ "$INPUT" =~ ^/load[[:space:]]+(.+) ]]; then
+			filename="${BASH_REMATCH[1]}"
+			content=$(cat "$filename" 2>&1)
+			chat_completion "$(printf "<file=%s>\n%s\n</file>" "$filename" "$content")"
+		else
+			echo "Please provide the file path to load."
+		fi
+	else
+		chat_completion "$INPUT"
+	fi
+}
+
 if [[ $# -ne 0 ]]; then
-	chat_completion "$*"
+	evaluate_input "$*"
 fi
 
 while true; do
-    read -r -e -p "> " QUESTION
-	echo ""
-    chat_completion "${QUESTION}"
+	read -r -e -p "$(timestamp) $(get_usage)> " USER_INPUT; echo ""
+	evaluate_input "$USER_INPUT"
 done
