@@ -116,7 +116,7 @@ count_visual_lines() {
 N_KEEP=$(tokenize "${SYSTEM}" | wc -l)
 
 chat_completion() {
-	echo "USER: $1"
+	# echo "USER: $1"
 	# echo "Formatting prompt..."
     PROMPT="$(format_prompt "$1")"
 
@@ -166,12 +166,16 @@ chat_completion() {
 
 		if [[ "$name" == "bash" ]]; then
 			local param=$(echo "$answer" | sed -n '/<parameter=command>/,/<\/parameter>/p' | sed '1d;$d')
-			response=$(eval "$param" 2>&1)
-			[ -z "$response" ] && response="exit code $?"
+			response=$(eval "$param" 2>&1 | tee /dev/stderr)
+			[ -z "$response" ] && response="exit code ${PIPESTATUS[0]}"
 		elif [[ "$name" == "read" ]]; then
 			local param=$(echo "$answer" | sed -n '/<parameter=name>/,/<\/parameter>/p' | sed '1d;$d')
-			response=$(cat "$param" 2>&1)
-			[ -z "$response" ] && response="exit code $?"
+			response=$(cat "$param" 2>&1 | tee /dev/stderr)
+			[ -z "$response" ] && response="exit code ${PIPESTATUS[0]}"
+		elif [[ "$name" == "subagent" ]]; then
+			local param=$(echo "$answer" | sed -n '/<parameter=prompt>/,/<\/parameter>/p' | sed '1d;$d')
+			response=$(${BASH_SOURCE[0]} "/ask $param" 2>&1 | tee /dev/stderr)
+			[ -z "$response" ] && response="exit code ${PIPESTATUS[0]}"
 		fi
 
 		if [[ -n "$response" ]]; then
@@ -195,6 +199,8 @@ evaluate_input() {
 	elif [[ "$INPUT" =~ ^/clear ]]; then
 		echo "Clearing chat..."
 		CHAT=()
+	elif [[ "$INPUT" =~ ^/ping ]]; then
+		echo "pong"
 	elif [[ "$INPUT" =~ ^/usage ]]; then
 		echo "tokens: $(get_usage)"
 	elif [[ "$INPUT" =~ ^/load ]]; then
@@ -205,6 +211,16 @@ evaluate_input() {
 		else
 			echo "Please provide the file path to load."
 		fi
+	elif [[ "$INPUT" =~ ^/ask ]]; then
+		if [[ "$INPUT" =~ ^/ask[[:space:]]+(.+) ]]; then
+			tmp=$(mktemp)
+			chat_completion "${BASH_REMATCH[1]}" > "$tmp"
+			echo "> Full output at: $tmp"
+			echo "${CHAT[-1]}" | sed '/<think>/,/<\/think>/d'
+		else
+			echo "Please provide the question/petition to ask."
+		fi
+		exit 0
 	else
 		chat_completion "$INPUT"
 	fi
@@ -214,7 +230,7 @@ if [[ $# -ne 0 ]]; then
 	evaluate_input "$*"
 fi
 
-while true; do
-	read -r -e -p "$(timestamp) $(get_usage)> " USER_INPUT; echo ""
-	evaluate_input "$USER_INPUT"
+while read -r -e -p "$(timestamp) $(get_usage)> " USER_INPUT; do
+    echo ""
+    evaluate_input "$USER_INPUT"
 done
