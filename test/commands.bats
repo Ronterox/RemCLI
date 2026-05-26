@@ -34,7 +34,7 @@ setup() {
 }
 
 @test "/load: load a file as context" {
-	run chat.sh <<-EOF
+	run timeout 4 chat.sh <<-EOF
 	/load benchmark/joke
 	/exit
 	EOF

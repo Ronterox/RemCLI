@@ -27,8 +27,7 @@ setup() {
 }
 
 @test "Can run subagents" {
-	run timeout 16 chat.sh <<-EOF
-	List your tools
+	run timeout 8 chat.sh <<-EOF
 	Call a subagent and tell it to run pwd
 	/exit
 	EOF
