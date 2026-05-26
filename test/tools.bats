@@ -17,8 +17,8 @@ setup() {
 }
 
 @test "Can read files" {
-	run timeout 12 chat.sh <<-EOF
-	Find the file called joke, read it, and tell me what it says exactly
+	run timeout 4 chat.sh <<-EOF
+	Read benchmark/joke, and tell me what it says exactly
 	/exit
 	EOF
 	assert_output --partial "$(cat benchmark/joke)"

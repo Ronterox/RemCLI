@@ -38,9 +38,7 @@ You have access to the following functions:
 $(bun run tools/tools.ts)
 </tools>
 
-If you choose to call a function ONLY reply in the following format with NO suffix:
-
-When you have the following tool:
+If you choose to call a function ONLY reply in the following format with NO suffix. For example, when you have the following tool:
 
 {\"type\": \"function\", \"function\": {\"name\": \"example_function_name\", \"description\": \"Description of what the function does goes here\", \"parameters\": {\"type\": \"object\", \"properties\": {\"example_parameter_1\": {\"type\": \"string\", \"description\": \"Description for the first parameter\"}, \"example_parameter_2\": {\"type\": \"string\", \"description\": \"Description for the second parameter (supports multi-line strings)\"}}, \"required\": [\"example_parameter_1\", \"example_parameter_2\"]}}}
 
