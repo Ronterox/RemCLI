@@ -127,6 +127,16 @@ chat_completion() {
 	fi
 }
 
+STATE_RAM="/dev/shm/chat_index.$$"
+trap 'rm -f "$STATE_RAM"' EXIT
+echo 0 > $STATE_RAM
+prompt_count() {
+	chat_index=$(cat $STATE_RAM)
+	chat_index=$((chat_index+1))
+	echo $chat_index > $STATE_RAM
+	echo "[$chat_index]"
+}
+
 get_usage() {
 	local tokens=$(tokenize "$(format_prompt)" | wc -l)
 	echo "$tokens/$CTX_SIZE ($((tokens*100/CTX_SIZE))%)"
@@ -176,7 +186,7 @@ if [[ $# -ne 0 ]]; then
 	evaluate_input "$*"
 fi
 
-while read -r -e -p "$(timestamp) $(get_usage)> " USER_INPUT; do
+while read -r -e -p "$(prompt_count) $(timestamp) $(get_usage)> " USER_INPUT; do
     echo ""
     evaluate_input "$USER_INPUT"
 done
