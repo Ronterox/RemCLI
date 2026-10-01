@@ -6,7 +6,7 @@ set -e
 
 # @cmd Starts a chat with the RemCLI
 chat() {
-	COMMANDS=(help exit clear ping checkhealth usage load ask)
+	COMMANDS=(help exit clear ping checkhealth usage load breakdown ask)
 	CTX_SIZE="$CTX_SIZE" rlwrap -c -f <(printf "%s\n" ${COMMANDS[@]/#//}) ./chat.sh
 }
 

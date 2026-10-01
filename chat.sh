@@ -165,7 +165,7 @@ timestamp() { printf "[%s]" "$(date +"%H:%M:%S")"; }
 
 evaluate_input() {
 	INPUT="$*"
-	COMMANDS=(help exit clear ping checkhealth usage load ask)
+	COMMANDS=(help exit clear ping checkhealth usage load breakdown ask)
 
 	if [[ "$INPUT" =~ ^/exit ]]; then
 		echo "Exiting..."
@@ -198,6 +198,14 @@ evaluate_input() {
 			echo "Please provide the question/petition to ask."
 		fi
 		exit 0
+	elif [[ "$INPUT" =~ ^/breakdown ]]; then
+		if [[ "$INPUT" =~ ^/breakdown[[:space:]]+(.+) ]]; then
+			REQUEST="/ask breakdown what the user is asking for <prompt>${BASH_REMATCH[1]}</prompt>"
+			breakdown=$(USE_TOOLS=false SYSTEM_PROMPT="$(cat agents/ANALYST.md)" ${BASH_SOURCE[0]} "$REQUEST" | tail +2)
+			chat_completion "$breakdown"
+		else
+			echo "Please provide the question/petition to breakdown."
+		fi
 	elif [[ "$INPUT" =~ ^/help ]]; then
 		echo "Available commands:"
 		printf "%s\n" "${COMMANDS[@]}"
