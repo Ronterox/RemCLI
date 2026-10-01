@@ -183,7 +183,7 @@ evaluate_input() {
 		if [[ "$INPUT" =~ ^/load[[:space:]]+(.+) ]]; then
 			filename="${BASH_REMATCH[1]}"
 			content=$(cat "$filename" 2>&1)
-			printf "<file=$filename>\n$(head $filename)\n...\n</file>\n"
+			printf "<file=$filename>\n$(head $filename)\n...\n</file>\n" | mq-view
 			chat_completion "$(printf "<file=%s>\n%s\n</file>" "$filename" "$content")"
 		else
 			echo "Please provide the file path to load."
@@ -202,6 +202,7 @@ evaluate_input() {
 		if [[ "$INPUT" =~ ^/breakdown[[:space:]]+(.+) ]]; then
 			REQUEST="/ask breakdown what the user is asking for <prompt>${BASH_REMATCH[1]}</prompt>"
 			breakdown=$(USE_TOOLS=false SYSTEM_PROMPT="$(cat agents/ANALYST.md)" ${BASH_SOURCE[0]} "$REQUEST" | tail +2)
+			echo "$breakdown" | mq-view | sed 's/^/\t/'
 			chat_completion "$breakdown"
 		else
 			echo "Please provide the question/petition to breakdown."

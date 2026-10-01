@@ -1,5 +1,13 @@
 # Agent CLI
 
+## Learnings
+
+- Formatting alone can mess things up, spaces, tabs
+- Randomness is fixed at 0 temperature, but per random time
+- Ofc is smarter at least context
+- Overwhelming information it needs to be stripped
+- You are saving a lot by specifying the whole persona to the task you want
+
 ## Metadata
 
 ### Where to find
