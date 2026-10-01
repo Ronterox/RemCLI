@@ -1,7 +1,30 @@
 #!/usr/bin/env bash
 
+: '
+CTX_SIZE=32768 \
+API_URL=http://127.0.0.1:8080 \
+SYSTEM_PROMPT="$(cat AGENTS.md)" \
+USE_TOOLS=true \
+./chat.sh /ask do something AI
+'
+
 API_URL="${API_URL:-http://127.0.0.1:8080}"
 CTX_SIZE="${CTX_SIZE:-32768}"
+
+# TODO: Add web search tool
+# TODO: memory wiki system with agent
+# TODO: Limit repetition infinite loop hashing
+
+# NOTE: Need smart trash context cleanup
+# NOTE: need orchestrating cause is smarter less context
+# NOTE: Separated agents with different tools per analysis or wiki saving task
+# NOTE: Even with web search tool decision need different agent for keeping out context
+
+SYSTEM_PROMPT=${SYSTEM_PROMPT:-$(cat AGENTS.md)}
+TOOLS_PROMPT=$(TOOLS=$(bun run tools/tools.ts) envsubst < tools/AGENTS.md)
+
+[[ "$USE_TOOLS" == "false" ]] && TOOLS_PROMPT="" || TOOLS_PROMPT=$(printf "$TOOLS_PROMPT\n\n")
+SYSTEM=$(printf "$SYSTEM_PROMPT\n\n$TOOLS_PROMPT")
 
 CHAT=(
     # "Hello, Assistant."
@@ -10,10 +33,6 @@ CHAT=(
     # "Sure. The largest city in Europe is Moscow, the capital of Russia."
 )
 CHAT=("${CHAT[@]/#/<think><\/think>}")
-
-SYSTEM_PROMPT=$(cat AGENTS.md)
-TOOLS_PROMPT=$(TOOLS=$(bun run tools/tools.ts) envsubst < tools/AGENTS.md)
-SYSTEM=$(printf "$SYSTEM_PROMPT\n\n$TOOLS_PROMPT\n\n")
 
 trim() {
     shopt -s extglob
