@@ -146,6 +146,8 @@ timestamp() { printf "[%s]" "$(date +"%H:%M:%S")"; }
 
 evaluate_input() {
 	INPUT="$*"
+	COMMANDS=(help exit clear ping checkhealth usage load ask)
+
 	if [[ "$INPUT" =~ ^/exit ]]; then
 		echo "Exiting..."
 		exit 0
@@ -177,6 +179,9 @@ evaluate_input() {
 			echo "Please provide the question/petition to ask."
 		fi
 		exit 0
+	elif [[ "$INPUT" =~ ^/help ]]; then
+		echo "Available commands:"
+		printf "%s\n" "${COMMANDS[@]}"
 	else
 		chat_completion "$INPUT"
 	fi
@@ -186,7 +191,7 @@ if [[ $# -ne 0 ]]; then
 	evaluate_input "$*"
 fi
 
-while read -r -e -p "$(prompt_count) $(timestamp) $(get_usage)> " USER_INPUT; do
+while read -r -p "$(prompt_count) $(timestamp) $(get_usage)> " USER_INPUT; do
     echo ""
     evaluate_input "$USER_INPUT"
 done
