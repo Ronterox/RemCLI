@@ -15,6 +15,20 @@ const tools = {
     }).describe(
         "Executes an arbitrary command in a non-interactive bash shell on the host machine. Current environment: Linux. Use this to inspect files, manage directories, run processes, or install dependencies. WARNING: Ensure commands are safe, complete, and do not hang indefinitely (avoid un-flagged commands like interactive 'sudo' or raw 'npm start')."
     ),
+	fetch: z.object({
+		url: z.string().describe(
+			"The URL used to fetch information from an specific website."
+		),
+	}).describe(
+		"Fetches/Uses an URL to return its detailed content/use the website. Best used for using websites on the internet."
+	),
+	websearch: z.object({
+		query: z.string().describe(
+			"The search query to use for quick searching. Be specific and concise."
+		),
+	}).describe(
+		"Searches the web for the specified query and returns a list of results. Use this to find information on the internet."
+	),
     subagent: z.object({
         prompt: z.string().describe(
             "The specific task, goal, or question you want the subagent to handle. Be explicit about what you expect back in the response."

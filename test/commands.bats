@@ -48,3 +48,6 @@ setup() {
 	assert_output --partial "> Full output at:"
 	refute_output --partial "</think>"
 }
+
+# @test "/breakdown: breakdown user request into steps" {
+# }

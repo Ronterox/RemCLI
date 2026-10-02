@@ -11,7 +11,7 @@ USE_TOOLS=true \
 API_URL="${API_URL:-http://127.0.0.1:8080}"
 CTX_SIZE="${CTX_SIZE:-32768}"
 
-# TODO: Add web search tool
+# TODO: Need edits and grep tool
 # TODO: memory wiki system with agent
 # TODO: Limit repetition infinite loop hashing
 
@@ -137,6 +137,19 @@ chat_completion() {
 		elif [[ "$name" == "subagent" ]]; then
 			local param=$(echo "$answer" | sed -n '/<parameter=prompt>/,/<\/parameter>/p' | sed '1d;$d')
 			response=$(${BASH_SOURCE[0]} "/ask $param" 2>&1 | tee /dev/stderr)
+			[ -z "$response" ] && response="exit code ${PIPESTATUS[0]}"
+		elif [[ "$name" == "websearch" ]]; then
+			local param=$(echo "$answer" | sed -n '/<parameter=query>/,/<\/parameter>/p' | sed '1d;$d')
+			response=$(ddgr --noua --unsafe --json --np "$param" | jq -r .[] | tee /dev/stderr)
+			[ -z "$response" ] && response="exit code ${PIPESTATUS[0]}"
+		elif [[ "$name" == "fetch" ]]; then
+			USER_AGENT="Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+			local param=$(echo "$answer" | sed -n '/<parameter=url>/,/<\/parameter>/p' | sed '1d;$d')
+			response=$(xh -b -I -F "$param" User-Agent:"$USER_AGENT" 2>&1)
+			if [[ "$response" == *"<title>Just a moment...</title>"* ]]; then
+				response=$(xh -b -I -F --json POST "$param" Content-Length:0 User-Agent:"$USER_AGENT" 2>&1)
+			fi
+			response=$(printf '%s' "$response" | mq-conv --format html | tee /dev/stderr)
 			[ -z "$response" ] && response="exit code ${PIPESTATUS[0]}"
 		fi
 

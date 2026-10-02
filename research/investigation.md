@@ -2,6 +2,8 @@
 
 ## Learnings
 
+- Do not be smart with tools. If AI have to think, it generates more think gets worse. Keep it simple. One tool, one functionality
+- JSON is the much better structure, it just knows it better handles it better. Easier to read even
 - Formatting alone can mess things up, spaces, tabs
 - Randomness is fixed at 0 temperature, but per random time
 - Ofc is smarter at least context
